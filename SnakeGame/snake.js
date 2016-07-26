@@ -18,10 +18,10 @@ c.addEventListener('click',clickCanvas);
 var snakeCoords = [];
 var directionQueue = [];
 var keys = {
-	down : 83,
-	right : 68,
-	up : 87,
-	left : 65
+	down : 40,
+	right : 39,
+	up : 38,
+	left : 37
 }
 //arrows => 40,39,38,37 down,right,up,left
 //s,d,w,a => 83,68,87,65
