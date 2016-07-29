@@ -1,0 +1,318 @@
+<!DOCTYPE html> 
+<head>
+	<title>2048</title>
+	<style>
+	#mygamecanvas{
+		overflow:hidden;
+	}
+	</style>
+</head>
+<body>
+	<canvas id="mygamecanvas" height="500" width="500" ></canvas>
+	<script>
+	////////////LISTENERS
+document.addEventListener('keydown',function(event){downKey(event.keyCode);});
+document.addEventListener('resize',resizeCanvas);
+////////////END
+
+////////VARIABLES
+window.onload = init;
+var c = document.getElementById("mygamecanvas");
+var ctx = c.getContext("2d");
+/////////END
+
+/////////CANVAS LISTENERS
+c.addEventListener('click',clickCanvas);
+/////////END
+
+//////OBJECTS
+var keys = {
+	down : 40,
+	right : 39,
+	up : 38,
+	left : 37
+}
+//arrows => 40,39,38,37 down,right,up,left
+//s,d,w,a => 83,68,87,65
+var gameOpt = {
+	score : 0,
+	highScore : 0,
+	boardSize : 4,
+	canvasSize : 500,
+	emptySize : 5,
+	backgroundColor : "#ffccff",
+	
+	isFinish : false,
+	firstRun : true,
+	isWin : false,
+	winMessageShowed : false,
+	moved : false,
+	stop : false
+}
+var styleOpt = {
+	scoreFont : "16px Arial",
+	numberTextColor : "#000000"
+}
+var numbers;
+//////END
+
+//////DRAW FUNCTIONS
+function drawBoard(){
+	var shapeSize = (gameOpt.canvasSize-gameOpt.emptySize*(gameOpt.boardSize+1))/gameOpt.boardSize;
+	for(i = 0;i < gameOpt.boardSize;i++){
+		for(j = 0;j < gameOpt.boardSize;j++){
+			posx = i*shapeSize+(i+1)*gameOpt.emptySize;
+			posy = j*shapeSize+(j+1)*gameOpt.emptySize;
+			if(numbers[i][j] > 0) ctx.fillStyle = createColorForNumber(numbers[i][j]);
+			else ctx.fillStyle = "#FFEFE0";
+			ctx.fillRect(posx,posy,shapeSize,shapeSize);
+			if(numbers[i][j] > 0){
+				ctx.font = 192/gameOpt.boardSize+"px Arial";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillStyle = styleOpt.numberTextColor;
+				ctx.fillText(numbers[i][j],posx+shapeSize/2,posy+shapeSize/2);	
+			}
+		
+		}
+	}
+	
+}
+function drawBackground(){
+	ctx.fillStyle = gameOpt.backgroundColor;
+	ctx.fillRect(0,0,gameOpt.canvasSize,gameOpt.canvasSize);
+}
+function drawScore(){
+	ctx.font = styleOpt.scoreFont;
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "left";
+	ctx.fillText("Score : "+gameOpt.score,10,20);	
+}
+function clearBackground(){
+	ctx.clearRect(0,0,c.width,c.height);
+}
+function drawMessageBox(message,showscore){
+	gameOpt.stop = true;
+	ctx.fillStyle = "rgba(0,0,66,0.7)";
+	ctx.fillRect(gameOpt.canvasSize/2-100,gameOpt.canvasSize/2-75,200,150);
+    ctx.font = "16px Arial";
+	ctx.fillStyle = "#FFFFFF";
+	ctx.textAlign = "center";
+	if(showscore){
+		ctx.fillText(message,gameOpt.canvasSize/2,gameOpt.canvasSize/2-60);
+		ctx.fillText("Score : "+gameOpt.score,gameOpt.canvasSize/2,gameOpt.canvasSize/2-30);
+		ctx.fillText("Highest Score : "+gameOpt.highScore,gameOpt.canvasSize/2,gameOpt.canvasSize/2);
+	}
+	else 
+		ctx.fillText(message,gameOpt.canvasSize/2,gameOpt.canvasSize/2);
+	ctx.fillText("Click game screen to play!",gameOpt.canvasSize/2,gameOpt.canvasSize/2+40);
+	ctx.fillText("Coded By EmreKul.",gameOpt.canvasSize/2,gameOpt.canvasSize/2+60);
+}
+//////END
+
+//////LISTENERS FUNCTIONS
+function downKey(key){
+	if(gameOpt.stop) return;
+	switch(key){
+		case keys.left:
+			rotateLeft(3);
+			calculateMatris();
+			rotateLeft(1);
+		break;
+		case keys.up:
+			calculateMatris();
+		break;
+		case keys.right:
+			rotateLeft(1);
+			calculateMatris();
+			rotateLeft(3);
+		break;
+		case keys.down:
+			rotateLeft(2);
+			calculateMatris();
+			rotateLeft(2);
+		break;
+	}
+	if(gameOpt.moved){
+		spawnNumber();
+		gameOpt.moved = false;
+	}
+	run();
+}
+function resizeCanvas(){
+	c.width = gameOpt.canvasSize;
+	c.height = gameOpt.canvasSize;
+	}
+function clickCanvas(){
+	
+	if(gameOpt.isFinish){
+		init();
+	}
+	else if(gameOpt.firstRun){
+		gameOpt.firstRun = false;
+		run();
+	}
+	else if(gameOpt.isWin && !gameOpt.winMessageShowed){
+		gameOpt.winMessageShowed = true;
+		run();
+	}
+	
+	if(gameOpt.stop)
+		gameOpt.stop = false;
+
+}
+//////END
+
+//////GAME FUNCTIONS
+function createColorForNumber(num){
+	color = { r:256,g:256,b:256}
+	dec = 64;
+	while(num > 1){
+		num /= 2;
+		if(color.b > 0) color.b -= dec;
+		else if(color.g > 0) {
+			color.g -= dec;
+		}
+		else if(color.r > 0) {
+			color.r -= dec;
+			color.g = 256;
+		}
+	}
+	return "rgb("+color.r+","+color.g+","+color.b+")";
+	
+}
+function initNumbers(){
+	numbers = new Array();
+	for(i = 0;i < gameOpt.boardSize;i++){
+		numbers[i] = new Array();
+		for(j = 0;j < gameOpt.boardSize;j++)
+			numbers[i][j] = 0;
+	}
+}
+function controlFinish(){
+	finded = false;
+	i = 0;
+	while(i < gameOpt.boardSize && !finded){
+		j = 0;
+		while(j < gameOpt.boardSize-1 && !finded){
+			if(numbers[i][j] == 0 || numbers[i][j+1] == 0)finded = true;
+			else if(numbers[i][j] == numbers[i][j+1]) finded = true;
+			else if(numbers[j][i] == numbers[j+1][i]) finded = true;
+			j++;
+		}
+		i++;
+	}
+	if(!finded)
+		gameOpt.isFinish = true;
+
+}
+
+function spawnNumber(){
+	percentage4 = 20;
+	number = Math.floor(Math.random()*100);
+	if(number < percentage4) number = 4;
+	else number = 2;
+	
+	randIndex = Math.floor(Math.random()*gameOpt.boardSize*gameOpt.boardSize+1);
+	
+	noneZero = false;
+	while(randIndex > 0 && !noneZero){
+		noneZero = true;
+		i = 0;
+		while(i < gameOpt.boardSize && randIndex > 0){
+			j = 0;
+			while(j < gameOpt.boardSize && randIndex > 0){
+				if(numbers[i][j] == 0){
+					randIndex--;
+					noneZero = false;
+					if(randIndex <= 0)numbers[i][j] = number;
+				}
+				j++;
+			}
+			i++;
+		}
+	}
+	if(noneZero)
+		controlFinish();
+	
+}
+function calculateMatris(){
+	for(i = 0;i < gameOpt.boardSize;i++){
+		for(j = 0;j < gameOpt.boardSize;j++){
+			x = j+1;
+			done = false;
+			while(x < gameOpt.boardSize && !done){
+				if(numbers[i][j] == 0 && numbers[i][x] > 0){
+					numbers[i][j] = numbers[i][x];
+					numbers[i][x] = 0;
+					gameOpt.moved = true;
+				}
+				else if(numbers[i][x] != 0 && numbers[i][j] != 0){
+					if(numbers[i][j] == numbers[i][x]){
+						numbers[i][j] = numbers[i][x]*2;
+						gameOpt.score += numbers[i][j];
+						if(numbers[i][j] == 2048)
+							gameOpt.isWin = true;
+						if(gameOpt.score > gameOpt.highScore)gameOpt.highScore = gameOpt.score;
+						numbers[i][x] = 0;
+						gameOpt.moved = true;
+					}
+					done = true;
+				}
+				x++;
+			}
+		}
+	}
+}
+function rotateLeft(turnNum){
+	while(turnNum > 0){
+		tempnumbers = new Array();
+		for(i = 0;i < gameOpt.boardSize;i++)
+			tempnumbers[i] = new Array();
+	
+		for(i = 0;i < gameOpt.boardSize;i++)
+			for(j  = 0;j < gameOpt.boardSize;j++)
+				tempnumbers[j][gameOpt.boardSize-i-1] = numbers[i][j];
+	
+		for(i = 0;i < gameOpt.boardSize;i++)
+			for(j = 0;j < gameOpt.boardSize;j++)
+				numbers[i][j] = tempnumbers[i][j];
+		turnNum--;
+	}
+}
+
+//END
+
+/////MAIN FUNCTIONS
+function init(){
+	gameOpt.isFinish = false;	
+	gameOpt.isWin = false;
+	gameOpt.winMessageShowed = false;
+	gameOpt.moved = false;
+	gameOpt.score = 0;
+	initNumbers();
+	spawnNumber();
+	resizeCanvas();
+	run();
+	if(gameOpt.firstRun)
+		drawMessageBox("Welcome!",false);
+}
+function run(){
+	clearBackground();
+	drawBackground();
+	drawBoard();
+	drawScore();
+	controlFinish();
+	if(gameOpt.isFinish)
+		drawMessageBox("Can't move!",true);
+	else if(gameOpt.isWin && !gameOpt.winMessageShowed)
+		drawMessageBox("You reach 2048!",false);
+	
+}
+/////END
+
+
+
+	</script>
+</body>
+</html>
