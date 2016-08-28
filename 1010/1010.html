@@ -1,0 +1,377 @@
+<!DOCTYPE html> 
+<head>
+	<title>1010</title>
+	<style>
+	#mygamecanvas{
+		overflow:hidden;
+	}
+	</style>
+</head>
+<body>
+<div style="margin-left:auto;margin-right:auto;width:500px;">
+
+	<canvas id="mygamecanvas" ></canvas>
+</div>
+	<script>
+
+////////VARIABLES
+window.onload = init;
+var c = document.getElementById("mygamecanvas");
+var ctx = c.getContext("2d");
+/////////END
+
+////////////LISTENERS
+document.addEventListener('resize',resizeCanvas);
+////////////END
+
+/////////CANVAS LISTENERS
+c.addEventListener('mousemove',mouseMove);
+c.addEventListener('mousedown',mouseDown);
+c.addEventListener('mouseup',mouseUp);
+/////////END
+
+//////OBJECTS
+var shapes =  [
+	{x : 20,y : 30,empty : true,shapeType : 0},
+	{x : 50,y : 30,empty : true,shapeType : 0},
+	{x : 60,y : 30,empty : true,shapeType : 0}
+]
+
+var gameOpt = {
+	score : 0,
+	highScore : 0,
+	boardSize : 10,
+	canvasSize : 500,
+	
+	menuSize : 120,
+	
+	emptySize : 2,
+	backgroundColor : "#000000",
+	isFinish : false,
+	firstRun : true,
+	debugOn : false
+}
+
+var shapeOpt = {
+	shapeSize : 0,
+	shapeHolderSize : 0,
+	minShapeSize : 0,
+	minShapeHolderSize : 0,
+	shapeHolderCount : 0,
+	activeShapeIndex : -1,
+	shapeCount : 0
+}
+
+var map;
+var mouse = {
+	posx : 0,
+	posy : 0
+}
+
+var shapeTypes = [
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#cc99ff"},//1 
+	{coords : [[0,0,0,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#ffff4d"},//hor 2 
+	{coords : [[0,0,0,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,0,0,0]],color : "#ff6600"},//hor 3 
+	{coords : [[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,0,0,0]],color : "#ff6600"},//hor 4 
+	{coords : [[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],color : "#ff5c33"},//hor 5 
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#ffff4d"},//vert 2 
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[0,1,1,1,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#ff6600"},//vert 3 
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#FF0000"},//vert 4 
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0]],color : "#ff5c33"},//vert 5 
+	{coords : [[0,0,0,0,0],[0,1,1,0,0],[0,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#00ff00"},//2x2 
+	{coords : [[1,1,1,0,0],[1,1,1,0,0],[1,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#00ff99"},//3x3 
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,1,0,0,0],[0,0,0,0,0]],color : "#00FF00"},//reverse-l1
+	{coords : [[0,0,0,0,0],[0,1,0,0,0],[0,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#00FF00"},//reverse-l2
+	{coords : [[0,0,0,0,0],[0,0,1,0,0],[0,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#00FF00"},//reverse-l3
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,0,0,0]],color : "#00FF00"},//reverse-l4
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,0,0],[1,0,0,0,0],[1,0,0,0,0]],color : "#00ff99"},//reversebig-l1
+	{coords : [[1,0,0,0,0],[1,0,0,0,0],[1,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#00ff99"},//reversebig-l2
+	{coords : [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],color : "#00ff99"},//reversebig-l3
+	{coords : [[0,0,1,0,0],[0,0,1,0,0],[1,1,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],color : "#00ff99"},//reversebig-l4
+]
+//////END
+
+//////DRAW FUNCTIONS
+function drawRoundedRectangle(x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  ctx.fill();
+}
+ 
+function drawBoard(){
+	for(i = 0;i < gameOpt.boardSize;i++){
+		for(j = 0;j < gameOpt.boardSize;j++){
+			posx = i*shapeOpt.shapeSize+(i+1)*gameOpt.emptySize+gameOpt.menuSize/2;
+			posy = j*shapeOpt.shapeSize+(j+1)*gameOpt.emptySize+gameOpt.menuSize/2;
+			if(map[i][j] == 0) ctx.fillStyle = "#4d4d4d";
+			else ctx.fillStyle = shapeTypes[map[i][j]-1].color;
+			drawRoundedRectangle(posx,posy,shapeOpt.shapeSize,shapeOpt.shapeSize,6);
+		}
+	}
+
+}
+function drawScore(){
+	ctx.font = "16px Arial";
+	ctx.fillStyle = "#ffffff";
+	ctx.textAlign = "center";
+	ctx.fillText(gameOpt.score+"@"+gameOpt.highScore,gameOpt.canvasSize/2,20);	
+}
+function clearBackground(){
+	ctx.clearRect(0,0,gameOpt.canvasSize,gameOpt.canvasSize+gameOpt.menuSize);
+	ctx.fillStyle = gameOpt.backgroundColor;
+	ctx.fillRect(0,0,gameOpt.canvasSize,gameOpt.canvasSize+gameOpt.menuSize);
+}
+function drawMessageBox(message,showscore){
+	gameOpt.stop = true;
+	ctx.fillStyle = "rgba(0,0,66,0.7)";
+	ctx.fillRect(gameOpt.canvasSize/2-100,gameOpt.canvasSize/2-75,200,150);
+    ctx.font = "16px Arial";
+	ctx.fillStyle = "#FFFFFF";
+	ctx.textAlign = "center";
+	if(showscore){
+		ctx.fillText(message,gameOpt.canvasSize/2,gameOpt.canvasSize/2-60);
+		ctx.fillText("Score : "+gameOpt.score,gameOpt.canvasSize/2,gameOpt.canvasSize/2-30);
+		ctx.fillText("Highest Score : "+gameOpt.highScore,gameOpt.canvasSize/2,gameOpt.canvasSize/2);
+	}
+	else 
+		ctx.fillText(message,gameOpt.canvasSize/2,gameOpt.canvasSize/2);
+	ctx.fillText("Click game screen to play!",gameOpt.canvasSize/2,gameOpt.canvasSize/2+40);
+	ctx.fillText("Coded By EmreKul.",gameOpt.canvasSize/2,gameOpt.canvasSize/2+60);
+}
+function drawShape(shapeIndex){
+	shape = shapes[shapeIndex];
+	shapeCoords = shapeTypes[shape.shapeType].coords;
+	x = shape.x;
+	y = shape.y;
+	ctx.fillStyle = "rgba(255,255,255,0.3)";
+	if(gameOpt.debugon){
+		if(shapeIndex == shapeOpt.activeShapeIndex)drawRoundedRectangle(x-shapeOpt.shapeHolderSize/2,y-shapeOpt.shapeHolderSize/2,shapeOpt.shapeHolderSize,shapeOpt.shapeHolderSize,6);
+		else drawRoundedRectangle(x,y,shapeOpt.minShapeHolderSize,shapeOpt.minShapeHolderSize,6);
+	}
+	ctx.fillStyle = shapeTypes[shape.shapeType].color;
+	for(i = 0;i < shapeOpt.shapeHolderCount;i++){
+		for(j = 0;j < shapeOpt.shapeHolderCount;j++){
+			if(shapeCoords[i][j] > 0){
+				if(shapeIndex == shapeOpt.activeShapeIndex)
+					drawRoundedRectangle(x-shapeOpt.shapeHolderSize/2+i*(shapeOpt.shapeSize+gameOpt.emptySize),y-shapeOpt.shapeHolderSize/2+j*(shapeOpt.shapeSize+gameOpt.emptySize),shapeOpt.shapeSize,shapeOpt.shapeSize,6);
+				else 
+					drawRoundedRectangle(x+i*(shapeOpt.minShapeSize+gameOpt.emptySize/3),y+j*(shapeOpt.minShapeSize+gameOpt.emptySize/3),shapeOpt.minShapeSize,shapeOpt.minShapeSize,2);
+			}
+		}
+	}
+}
+
+function drawShapes(){
+	for(m = 0;m < 3;m++)
+		if(!shapes[m].empty)
+			drawShape(m);
+}
+//////END
+
+//////LISTENERS FUNCTIONS
+function resizeCanvas(){
+	c.width = gameOpt.canvasSize;
+	c.height = gameOpt.canvasSize;
+	calculateShapeOptions();
+}
+
+function mouseMove(e){
+	var rect = c.getBoundingClientRect();
+    mouse.posx = e.clientX - rect.left;
+    mouse.posy = e.clientY - rect.top;
+    
+	if(shapeOpt.activeShapeIndex > -1){
+		shapes[shapeOpt.activeShapeIndex].x = mouse.posx;
+		shapes[shapeOpt.activeShapeIndex].y = mouse.posy;
+		
+		run();
+	}
+}
+function mouseHitShape(){
+	for(i = 0;i < 3;i++){
+		if(mouse.posx <= shapes[i].x+shapeOpt.minShapeHolderSize && mouse.posx >= shapes[i].x)
+			if(mouse.posy < shapes[i].y+shapeOpt.minShapeHolderSize && mouse.posy > shapes[i].y)
+				shapeOpt.activeShapeIndex = i;
+	}
+}
+
+function mouseUp(e){
+	dropShape();
+	shapeOpt.activeShapeIndex = -1;
+	run();
+}
+function mouseDown(e){
+	if(gameOpt.isFinish)
+		init();
+	else if(gameOpt.firstRun){
+		gameOpt.firstRun = false;
+		run();
+	}
+	else{
+		mouseHitShape()
+		run();
+	}
+
+}
+
+//////END
+
+//////GAME FUNCTIONS
+function spawnShapes(refreshAll = false){
+	i = 0;
+	while(i < 3 && shapes[i].empty)
+		i++;
+	if(i == 3) refreshAll = true;
+	for(i = 0;i < 3;i++){
+		shapes[i].x = (gameOpt.canvasSize/4)*(i+1);
+		shapes[i].y = gameOpt.canvasSize-shapeOpt.minShapeHolderSize-5;
+		
+		if(refreshAll){
+			shapes[i].shapeType = Math.floor(Math.random()*shapeOpt.shapeCount);
+			shapes[i].empty = false;
+		}
+	}
+}
+function calculateShapeOptions(){
+	shapeOpt.shapeHolderCount = 5;
+	shapeOpt.shapeSize = (gameOpt.canvasSize-gameOpt.menuSize-gameOpt.emptySize*(gameOpt.boardSize+1))/gameOpt.boardSize;
+	shapeOpt.shapeHolderSize = shapeOpt.shapeHolderCount*(shapeOpt.shapeSize+gameOpt.emptySize);
+	shapeOpt.minShapeSize = shapeOpt.shapeSize/shapeOpt.shapeHolderCount;
+	shapeOpt.minShapeHolderSize = shapeOpt.shapeHolderSize/shapeOpt.shapeHolderCount;
+	shapeOpt.shapeCount = shapeTypes.length;
+}
+function dropShape(){
+		if(shapeOpt.activeShapeIndex > -1){
+			i = shapeOpt.activeShapeIndex;
+		
+			mapx = parseInt((shapes[i].x-gameOpt.menuSize/2)/(shapeOpt.shapeSize+gameOpt.emptySize));
+			mapy = parseInt((shapes[i].y-gameOpt.menuSize/2)/(shapeOpt.shapeSize+gameOpt.emptySize));
+			diff = Math.floor(shapeOpt.shapeHolderCount/2);
+
+			shapeCoords = shapeTypes[shapes[i].shapeType].coords;
+			
+			if(controlShapeCanDrop(shapes[i],mapx,mapy)){
+				shapes[i].empty = true;
+				for(m = 0;m < shapeOpt.shapeHolderCount;m++)
+					for(n = 0;n < shapeOpt.shapeHolderCount;n++)
+						if(shapeCoords[m][n] > 0){
+							addToScore(1);
+							map[mapx+m-2][mapy+n-2] = shapes[i].shapeType+1;
+						}
+			}
+			
+		}
+	spawnShapes();
+	controlBoard();
+	controlFinish();
+}
+function controlBoard(){
+	xindexes = [];
+	yindexes = [];
+	
+	for(i = 0;i < gameOpt.boardSize;i++){
+		xnozero = true;
+		ynozero = true;
+		for(j = 0;j < gameOpt.boardSize;j++){
+			if(map[i][j] == 0)xnozero = false;
+			if(map[j][i] == 0)ynozero = false;
+		}
+		if(xnozero)xindexes.push(i);
+		if(ynozero)yindexes.push(i);
+	}
+	
+	while(xindexes.length > 0){
+		addToScore(gameOpt.boardSize);
+		index = xindexes.pop()
+		for(i = 0;i < gameOpt.boardSize;i++)
+			map[index][i] = 0;	
+	}
+	while(yindexes.length > 0){
+		addToScore(gameOpt.boardSize);
+		index = yindexes.pop()
+		for(i = 0;i < gameOpt.boardSize;i++)
+			map[i][index] = 0;
+	}
+}
+function controlFinish(){
+	finished = true;
+	
+	for(i = 0;i < shapes.length;i++){
+		if(!shapes[i].empty){
+			bx = 0;//boardx
+			while(bx < gameOpt.boardSize && finished){
+				by = 0;//boardy
+				while(by < gameOpt.boardSize && finished){
+						finished = !controlShapeCanDrop(shapes[i],bx,by);
+				by++;	
+				}
+			bx++;
+			}
+		}
+	}
+	gameOpt.isFinish = finished;
+}
+function controlShapeCanDrop(shape,cx,cy){
+	diff = Math.floor(shapeOpt.shapeHolderCount/2);
+	shapeCoords = shapeTypes[shape.shapeType].coords;
+	nocol = true;
+	for(sx = 0;sx < shapeOpt.shapeHolderCount;sx++){//shapex
+		for(sy = 0;sy < shapeOpt.shapeHolderCount;sy++){//shapey
+			if(shapeCoords[sx][sy] > 0){
+				if(cx+sx-diff < 0 || cy+sy-diff < 0 || cx+sx-diff >=gameOpt.boardSize || cy+sy-diff >= gameOpt.boardSize)nocol = false;
+				else if(map[cx+sx-diff][cy+sy-diff] > 0)nocol = false;
+			}			
+		}
+	}
+	return nocol;
+}
+function initMap(){
+	map = new Array();
+	for(i = 0;i < gameOpt.boardSize;i++){
+		map[i] = new Array();
+		for(j = 0;j < gameOpt.boardSize;j++)
+			map[i][j] = 0;
+	}
+}
+
+function addToScore(score){
+	gameOpt.score += score;
+	if(gameOpt.score > gameOpt.highScore ) gameOpt.highScore = gameOpt.score;
+}
+//END
+
+/////MAIN FUNCTIONS
+function init(){
+	gameOpt.isFinish = false;	
+	gameOpt.score = 0;
+	resizeCanvas();
+	spawnShapes(true);
+	initMap();
+	run();
+	if(gameOpt.firstRun)
+		drawMessageBox("Welcome!",false);
+}
+function run(){
+	clearBackground();
+	drawBoard();
+	drawScore();
+	drawShapes();
+	if(gameOpt.isFinish)
+		drawMessageBox("Game Finished!",true);	
+}
+/////END
+
+
+
+	</script>
+</body>
+</html>
