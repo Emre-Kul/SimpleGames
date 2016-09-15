@@ -9,7 +9,8 @@
 </head>
 <body>
 	<canvas id="mygamecanvas" height="500" width="500" ></canvas>
-	<script>
+
+<script>
 	////////////LISTENERS
 document.addEventListener('keydown',function(event){downKey(event.keyCode);});
 document.addEventListener('resize',resizeCanvas);
@@ -59,10 +60,10 @@ var numbers;
 //////DRAW FUNCTIONS
 function drawBoard(){
 	var shapeSize = (gameOpt.canvasSize-gameOpt.emptySize*(gameOpt.boardSize+1))/gameOpt.boardSize;
-	for(i = 0;i < gameOpt.boardSize;i++){
-		for(j = 0;j < gameOpt.boardSize;j++){
-			posx = i*shapeSize+(i+1)*gameOpt.emptySize;
-			posy = j*shapeSize+(j+1)*gameOpt.emptySize;
+	for(var i = 0;i < gameOpt.boardSize;i++){
+		for(var j = 0;j < gameOpt.boardSize;j++){
+			var posx = i*shapeSize+(i+1)*gameOpt.emptySize;
+			var posy = j*shapeSize+(j+1)*gameOpt.emptySize;
 			if(numbers[i][j] > 0) ctx.fillStyle = createColorForNumber(numbers[i][j]);
 			else ctx.fillStyle = "#FFEFE0";
 			ctx.fillRect(posx,posy,shapeSize,shapeSize);
@@ -78,10 +79,6 @@ function drawBoard(){
 	}
 	
 }
-function drawBackground(){
-	ctx.fillStyle = gameOpt.backgroundColor;
-	ctx.fillRect(0,0,gameOpt.canvasSize,gameOpt.canvasSize);
-}
 function drawScore(){
 	ctx.font = styleOpt.scoreFont;
 	ctx.fillStyle = "#000000";
@@ -90,6 +87,8 @@ function drawScore(){
 }
 function clearBackground(){
 	ctx.clearRect(0,0,c.width,c.height);
+	ctx.fillStyle = gameOpt.backgroundColor;
+	ctx.fillRect(0,0,gameOpt.canvasSize,gameOpt.canvasSize);
 }
 function drawMessageBox(message,showscore){
 	gameOpt.stop = true;
@@ -165,8 +164,8 @@ function clickCanvas(){
 
 //////GAME FUNCTIONS
 function createColorForNumber(num){
-	color = { r:256,g:256,b:256}
-	dec = 64;
+	var color = { r:256,g:256,b:256}
+	var dec = 64;
 	while(num > 1){
 		num /= 2;
 		if(color.b > 0) color.b -= dec;
@@ -190,7 +189,7 @@ function initNumbers(){
 	}
 }
 function controlFinish(){
-	finded = false;
+	var finded = false;
 	i = 0;
 	while(i < gameOpt.boardSize && !finded){
 		j = 0;
@@ -208,19 +207,19 @@ function controlFinish(){
 }
 
 function spawnNumber(){
-	percentage4 = 20;
-	number = Math.floor(Math.random()*100);
+	var percentage4 = 20;
+	var number = Math.floor(Math.random()*100);
 	if(number < percentage4) number = 4;
 	else number = 2;
 	
-	randIndex = Math.floor(Math.random()*gameOpt.boardSize*gameOpt.boardSize+1);
+	var randIndex = Math.floor(Math.random()*gameOpt.boardSize*gameOpt.boardSize+1);
 	
-	noneZero = false;
+	var noneZero = false;
 	while(randIndex > 0 && !noneZero){
 		noneZero = true;
-		i = 0;
+		var i = 0;
 		while(i < gameOpt.boardSize && randIndex > 0){
-			j = 0;
+			var j = 0;
 			while(j < gameOpt.boardSize && randIndex > 0){
 				if(numbers[i][j] == 0){
 					randIndex--;
@@ -237,10 +236,10 @@ function spawnNumber(){
 	
 }
 function calculateMatris(){
-	for(i = 0;i < gameOpt.boardSize;i++){
-		for(j = 0;j < gameOpt.boardSize;j++){
-			x = j+1;
-			done = false;
+	for(var i = 0;i < gameOpt.boardSize;i++){
+		for(var j = 0;j < gameOpt.boardSize;j++){
+			var x = j+1;
+			var done = false;
 			while(x < gameOpt.boardSize && !done){
 				if(numbers[i][j] == 0 && numbers[i][x] > 0){
 					numbers[i][j] = numbers[i][x];
@@ -266,16 +265,16 @@ function calculateMatris(){
 }
 function rotateLeft(turnNum){
 	while(turnNum > 0){
-		tempnumbers = new Array();
-		for(i = 0;i < gameOpt.boardSize;i++)
+		var tempnumbers = new Array();
+		for(var i = 0;i < gameOpt.boardSize;i++)
 			tempnumbers[i] = new Array();
 	
-		for(i = 0;i < gameOpt.boardSize;i++)
-			for(j  = 0;j < gameOpt.boardSize;j++)
+		for(var i = 0;i < gameOpt.boardSize;i++)
+			for(var j  = 0;j < gameOpt.boardSize;j++)
 				tempnumbers[j][gameOpt.boardSize-i-1] = numbers[i][j];
 	
-		for(i = 0;i < gameOpt.boardSize;i++)
-			for(j = 0;j < gameOpt.boardSize;j++)
+		for(var i = 0;i < gameOpt.boardSize;i++)
+			for(var j = 0;j < gameOpt.boardSize;j++)
 				numbers[i][j] = tempnumbers[i][j];
 		turnNum--;
 	}
@@ -299,7 +298,6 @@ function init(){
 }
 function run(){
 	clearBackground();
-	drawBackground();
 	drawBoard();
 	drawScore();
 	controlFinish();
