@@ -9,11 +9,9 @@
 </head>
 <body>
 <div style="margin-left:auto;margin-right:auto;width:500px;">
-
 	<canvas id="mygamecanvas" ></canvas>
 </div>
-	<script>
-
+<script>
 ////////VARIABLES
 window.onload = init;
 var c = document.getElementById("mygamecanvas");
@@ -42,9 +40,7 @@ var gameOpt = {
 	highScore : 0,
 	boardSize : 10,
 	canvasSize : 500,
-	
 	menuSize : 120,
-	
 	emptySize : 2,
 	backgroundColor : "#000000",
 	isFinish : false,
@@ -108,10 +104,10 @@ function drawRoundedRectangle(x, y, width, height, radius) {
 }
  
 function drawBoard(){
-	for(i = 0;i < gameOpt.boardSize;i++){
-		for(j = 0;j < gameOpt.boardSize;j++){
-			posx = i*shapeOpt.shapeSize+(i+1)*gameOpt.emptySize+gameOpt.menuSize/2;
-			posy = j*shapeOpt.shapeSize+(j+1)*gameOpt.emptySize+gameOpt.menuSize/2;
+	for(var i = 0;i < gameOpt.boardSize;i++){
+		for(var j = 0;j < gameOpt.boardSize;j++){
+			var posx = i*shapeOpt.shapeSize+(i+1)*gameOpt.emptySize+gameOpt.menuSize/2;
+			var posy = j*shapeOpt.shapeSize+(j+1)*gameOpt.emptySize+gameOpt.menuSize/2;
 			if(map[i][j] == 0) ctx.fillStyle = "#4d4d4d";
 			else ctx.fillStyle = shapeTypes[map[i][j]-1].color;
 			drawRoundedRectangle(posx,posy,shapeOpt.shapeSize,shapeOpt.shapeSize,6);
@@ -148,18 +144,18 @@ function drawMessageBox(message,showscore){
 	ctx.fillText("Coded By EmreKul.",gameOpt.canvasSize/2,gameOpt.canvasSize/2+60);
 }
 function drawShape(shapeIndex){
-	shape = shapes[shapeIndex];
+	var shape = shapes[shapeIndex];
 	shapeCoords = shapeTypes[shape.shapeType].coords;
-	x = shape.x;
-	y = shape.y;
+	var x = shape.x;
+	var y = shape.y;
 	ctx.fillStyle = "rgba(255,255,255,0.3)";
 	if(gameOpt.debugon){
 		if(shapeIndex == shapeOpt.activeShapeIndex)drawRoundedRectangle(x-shapeOpt.shapeHolderSize/2,y-shapeOpt.shapeHolderSize/2,shapeOpt.shapeHolderSize,shapeOpt.shapeHolderSize,6);
 		else drawRoundedRectangle(x,y,shapeOpt.minShapeHolderSize,shapeOpt.minShapeHolderSize,6);
 	}
 	ctx.fillStyle = shapeTypes[shape.shapeType].color;
-	for(i = 0;i < shapeOpt.shapeHolderCount;i++){
-		for(j = 0;j < shapeOpt.shapeHolderCount;j++){
+	for(var i = 0;i < shapeOpt.shapeHolderCount;i++){
+		for(var j = 0;j < shapeOpt.shapeHolderCount;j++){
 			if(shapeCoords[i][j] > 0){
 				if(shapeIndex == shapeOpt.activeShapeIndex)
 					drawRoundedRectangle(x-shapeOpt.shapeHolderSize/2+i*(shapeOpt.shapeSize+gameOpt.emptySize),y-shapeOpt.shapeHolderSize/2+j*(shapeOpt.shapeSize+gameOpt.emptySize),shapeOpt.shapeSize,shapeOpt.shapeSize,6);
@@ -171,9 +167,9 @@ function drawShape(shapeIndex){
 }
 
 function drawShapes(){
-	for(m = 0;m < 3;m++)
-		if(!shapes[m].empty)
-			drawShape(m);
+	for(var i = 0;i < 3;i++)
+		if(!shapes[i].empty)
+			drawShape(i);
 }
 //////END
 
@@ -197,7 +193,7 @@ function mouseMove(e){
 	}
 }
 function mouseHitShape(){
-	for(i = 0;i < 3;i++){
+	for(var i = 0;i < 3;i++){
 		if(mouse.posx <= shapes[i].x+shapeOpt.minShapeHolderSize && mouse.posx >= shapes[i].x)
 			if(mouse.posy < shapes[i].y+shapeOpt.minShapeHolderSize && mouse.posy > shapes[i].y)
 				shapeOpt.activeShapeIndex = i;
@@ -227,7 +223,7 @@ function mouseDown(e){
 
 //////GAME FUNCTIONS
 function spawnShapes(refreshAll = false){
-	i = 0;
+	var i = 0;
 	while(i < 3 && shapes[i].empty)
 		i++;
 	if(i == 3) refreshAll = true;
@@ -251,18 +247,18 @@ function calculateShapeOptions(){
 }
 function dropShape(){
 		if(shapeOpt.activeShapeIndex > -1){
-			i = shapeOpt.activeShapeIndex;
+			var i = shapeOpt.activeShapeIndex;
 		
-			mapx = parseInt((shapes[i].x-gameOpt.menuSize/2)/(shapeOpt.shapeSize+gameOpt.emptySize));
-			mapy = parseInt((shapes[i].y-gameOpt.menuSize/2)/(shapeOpt.shapeSize+gameOpt.emptySize));
-			diff = Math.floor(shapeOpt.shapeHolderCount/2);
+			var mapx = parseInt((shapes[i].x-gameOpt.menuSize/2)/(shapeOpt.shapeSize+gameOpt.emptySize));
+			var mapy = parseInt((shapes[i].y-gameOpt.menuSize/2)/(shapeOpt.shapeSize+gameOpt.emptySize));
+			var diff = Math.floor(shapeOpt.shapeHolderCount/2);
 
 			shapeCoords = shapeTypes[shapes[i].shapeType].coords;
 			
 			if(controlShapeCanDrop(shapes[i],mapx,mapy)){
 				shapes[i].empty = true;
-				for(m = 0;m < shapeOpt.shapeHolderCount;m++)
-					for(n = 0;n < shapeOpt.shapeHolderCount;n++)
+				for(var m = 0;m < shapeOpt.shapeHolderCount;m++)
+					for(var n = 0;n < shapeOpt.shapeHolderCount;n++)
 						if(shapeCoords[m][n] > 0){
 							addToScore(1);
 							map[mapx+m-2][mapy+n-2] = shapes[i].shapeType+1;
@@ -275,13 +271,13 @@ function dropShape(){
 	controlFinish();
 }
 function controlBoard(){
-	xindexes = [];
-	yindexes = [];
+	var xindexes = [];
+	var yindexes = [];
 	
-	for(i = 0;i < gameOpt.boardSize;i++){
-		xnozero = true;
-		ynozero = true;
-		for(j = 0;j < gameOpt.boardSize;j++){
+	for(var i = 0;i < gameOpt.boardSize;i++){
+		var xnozero = true;
+		var ynozero = true;
+		for(var j = 0;j < gameOpt.boardSize;j++){
 			if(map[i][j] == 0)xnozero = false;
 			if(map[j][i] == 0)ynozero = false;
 		}
@@ -303,13 +299,13 @@ function controlBoard(){
 	}
 }
 function controlFinish(){
-	finished = true;
+	var finished = true;
 	
-	for(i = 0;i < shapes.length;i++){
+	for(var i = 0;i < shapes.length;i++){
 		if(!shapes[i].empty){
-			bx = 0;//boardx
+			var bx = 0;//boardx
 			while(bx < gameOpt.boardSize && finished){
-				by = 0;//boardy
+				var by = 0;//boardy
 				while(by < gameOpt.boardSize && finished){
 						finished = !controlShapeCanDrop(shapes[i],bx,by);
 				by++;	
@@ -321,11 +317,11 @@ function controlFinish(){
 	gameOpt.isFinish = finished;
 }
 function controlShapeCanDrop(shape,cx,cy){
-	diff = Math.floor(shapeOpt.shapeHolderCount/2);
-	shapeCoords = shapeTypes[shape.shapeType].coords;
-	nocol = true;
-	for(sx = 0;sx < shapeOpt.shapeHolderCount;sx++){//shapex
-		for(sy = 0;sy < shapeOpt.shapeHolderCount;sy++){//shapey
+	var diff = Math.floor(shapeOpt.shapeHolderCount/2);
+	var shapeCoords = shapeTypes[shape.shapeType].coords;
+	var nocol = true;
+	for(var sx = 0;sx < shapeOpt.shapeHolderCount;sx++){//shapex
+		for(var sy = 0;sy < shapeOpt.shapeHolderCount;sy++){//shapey
 			if(shapeCoords[sx][sy] > 0){
 				if(cx+sx-diff < 0 || cy+sy-diff < 0 || cx+sx-diff >=gameOpt.boardSize || cy+sy-diff >= gameOpt.boardSize)nocol = false;
 				else if(map[cx+sx-diff][cy+sy-diff] > 0)nocol = false;
@@ -336,9 +332,9 @@ function controlShapeCanDrop(shape,cx,cy){
 }
 function initMap(){
 	map = new Array();
-	for(i = 0;i < gameOpt.boardSize;i++){
+	for(var i = 0;i < gameOpt.boardSize;i++){
 		map[i] = new Array();
-		for(j = 0;j < gameOpt.boardSize;j++)
+		for(var j = 0;j < gameOpt.boardSize;j++)
 			map[i][j] = 0;
 	}
 }
@@ -372,6 +368,6 @@ function run(){
 
 
 
-	</script>
+</script>
 </body>
 </html>
